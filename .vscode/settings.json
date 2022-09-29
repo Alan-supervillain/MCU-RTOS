@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "mylog.h": "c",
+        "bsp_dht11.h": "c"
+    }
+}

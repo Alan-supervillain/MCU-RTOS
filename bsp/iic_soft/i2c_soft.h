@@ -38,8 +38,7 @@ u8    I2C_ReceiveByte(void);
  int Single_Write(unsigned char SlaveAddress,unsigned char REG_Address,unsigned char REG_data);		     //void
 unsigned char Single_Read(unsigned char SlaveAddress,unsigned char REG_Address);
 
-int MPU_I2C_WaitAck(void);
- 
+
 #endif
 
 

@@ -9,6 +9,7 @@
         "bsp_dmziig.h": "c",
         "oled_draw_ex_example.h": "c",
         "sys.h": "c",
-        "bsp_key.h": "c"
+        "bsp_key.h": "c",
+        "delay.h": "c"
     }
 }

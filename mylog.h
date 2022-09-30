@@ -45,3 +45,4 @@
 #endif
 
 #endif   /*MYLOG_H__*/
+

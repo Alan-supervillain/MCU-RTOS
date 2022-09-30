@@ -19,7 +19,6 @@ void I2C_GPIO_Config(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;  
     GPIO_Init(SDA_PORT, &GPIO_InitStructure);  
 }
-
 /**************************************************************************  
 * 函数名: void I2C_delay(void)
 * 描述  : 短暂延时
@@ -123,24 +122,7 @@ int I2C_WaitAck(void)
 //等待应答信号到来
 //返回值：1，接收应答失败
 //        0，接收应答成功
-int MPU_I2C_WaitAck(void)    
-{  
-    u8 ucErrTime=0;
-    SCL_L;  I2C_delay();  
-    SDA_H;  I2C_delay();  
-    SCL_H;  I2C_delay();  
-    while(SDA_read)  
-    {  
-        ucErrTime++;
-        if(ucErrTime>250)
-        {
-            I2C_Stop();
-            return 1;
-        }
-    }  
-    SCL_L;  
-    return 0;  
-}  
+
 /**************************************************************************  
 * 函数名: void I2C_SendByte(u8 SendByte)  
 * 描述  : 发送一个字节

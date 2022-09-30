@@ -23,7 +23,7 @@ static TaskHandle_t DHT11_Task_Handle = NULL;
 /* Weight_Task任务句柄 */
 static TaskHandle_t Weight_Task_Handle = NULL;
 /* 显示屏任务句柄 */
-static TaskHandle_t dispaly_Task_Handle = NULL;
+static TaskHandle_t display_Task_Handle = NULL;
 
 /******************************* 全局变量声明 ************************************/
 /*
@@ -40,7 +40,7 @@ static void AppTaskCreate(void);/* 用于创建任务 */
 
 static void DHT11_Task(void* pvParameters);/* TaskDHT11任务实现 */
 static void Weight_Task(void* pvParameters);/* Weight_Task_Task任务实现 */
-static void dispaly_Task(void* pvParameters);
+static void display_Task(void* pvParameters);
 
 static void BSP_Init(void);/* 用于初始化板载相关资源 */
 
@@ -107,14 +107,14 @@ static void AppTaskCreate(void)
   if(pdPASS == xReturn)
     INFO("创建Weight_Task任务成功!\r\n");
   
-   xReturn = xTaskCreate((TaskFunction_t )dispaly_Task, /* 任务入口函数 */
-                        (const char*    )"dispaly_Task",/* 任务名字 */
+   xReturn = xTaskCreate((TaskFunction_t )display_Task, /* 任务入口函数 */
+                        (const char*    )"display_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
                         (UBaseType_t    )1,	    /* 任务的优先级 */
-                        (TaskHandle_t*  )&dispaly_Task_Handle);/* 任务控制块指针 */
+                        (TaskHandle_t*  )&display_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
-    INFO("创建Weight_Task任务成功!\r\n");
+    INFO("创建display_Task任务成功!\r\n");
 
 
   vTaskDelete(AppTaskCreate_Handle); //删除AppTaskCreate任务
@@ -157,7 +157,7 @@ static void Weight_Task(void* parameter)
       if( Flag_ERROR == 1)
       {
         printf("ERROR-->超重\n");
-        buzzer_on;                        //还可以改一下，一直叫，下面else才关--------------------------------
+        buzzer_on;                        
         LED_RED;
       }		
       else
@@ -178,12 +178,11 @@ static void Weight_Task(void* parameter)
     }
 }
 
-
 static void display_Task(void* parameter)
 {	
     while (1)
     {
-      //--------------------待做
+      INFO("test\n");//--------------------待做
     }
 }
 /***********************************************************************
@@ -208,6 +207,8 @@ static void BSP_Init(void)
 	dmziig_init();	
 	buzzer_GPIO_Config();
 	DHT11_Init();
+
+  //delay_init();	    	 //这里测试下
   I2C_GPIO_Config();
   LCD_Init();
 	INFO("硬件初始化成功\n");

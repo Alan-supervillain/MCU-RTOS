@@ -16,7 +16,7 @@
   */ 
   
 #include "bsp_key.h"  
-
+#include "bsp_dmziig.h" 
 /**
   * @brief  配置按键用到的I/O口
   * @param  无
@@ -63,4 +63,17 @@ uint8_t Key_Scan(GPIO_TypeDef* GPIOx,uint16_t GPIO_Pin)
 	else
 		return KEY_OFF;
 }
+	//扫描按键
+void Scan_Key()   //豪华_硬件去抖
+{
+	
+		if( GPIO_ReadInputDataBit(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON )
+				{
+					// 松手检测
+					while( GPIO_ReadInputDataBit(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON )
+							;
+					Get_Maopi();			//去皮
+				}	
+}
+
 /*********************************************END OF FILE**********************/

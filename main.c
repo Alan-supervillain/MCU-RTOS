@@ -1,130 +1,125 @@
+/*
+×÷Õß£ºalan
+ÓÊÏä£º3096141163@com
+*/
 #include "FreeRTOS.h"
 #include "task.h"
 #include "bsp_led.h"
 #include "bsp_usart.h"
 #include "bsp_key.h"
 #include "buzzer.h"
-#include "bsp_dmziig.h"//ç”µå­ç§¤åŒæ‹¼
-#include "mylog.h"     //æ—¥å¿—åº“å¼€æ»¡äº†
+#include "bsp_dmziig.h"//µç×Ó³ÓË«Æ´
+#include "mylog.h"     //ÈÕÖ¾¿â¿ªÂúÁË
 #include "bsp_dht11.h"
 
- /* åˆ›å»ºä»»åŠ¡å¥æŸ„ */
+#include "draw_api.h"  //´¿ÉùÃ÷º¯Êý
+#include "test.h"
+#include "lcd.h"
+#include "i2c_soft.h"
+ /* ´´½¨ÈÎÎñ¾ä±ú */
 static TaskHandle_t AppTaskCreate_Handle = NULL;
-/* ä»»åŠ¡å¥æŸ„ */
+/* ÈÎÎñ¾ä±ú */
 static TaskHandle_t DHT11_Task_Handle = NULL;
-/* Weight_Taskä»»åŠ¡å¥æŸ„ */
+/* Weight_TaskÈÎÎñ¾ä±ú */
 static TaskHandle_t Weight_Task_Handle = NULL;
-/* æ˜¾ç¤ºå±ä»»åŠ¡å¥æŸ„ */
-static TaskHandle_t dispaly_Handle = NULL;
+/* ÏÔÊ¾ÆÁÈÎÎñ¾ä±ú */
+static TaskHandle_t dispaly_Task_Handle = NULL;
 
-	//æ‰«ææŒ‰é”®
-void Scan_Key()   //è±ªåŽ_ç¡¬ä»¶åŽ»æŠ–
-{
-	
-		if( GPIO_ReadInputDataBit(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON )
-				{
-					// æ¾æ‰‹æ£€æµ‹
-					while( GPIO_ReadInputDataBit(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON )
-							;
-					Get_Maopi();			//åŽ»çš®
-				}	
-}
-
-/******************************* å…¨å±€å˜é‡å£°æ˜Ž ************************************/
+/******************************* È«¾Ö±äÁ¿ÉùÃ÷ ************************************/
 /*
- * å½“æˆ‘ä»¬åœ¨å†™åº”ç”¨ç¨‹åºçš„æ—¶å€™ï¼Œå¯èƒ½éœ€è¦ç”¨åˆ°ä¸€äº›å…¨å±€å˜é‡ã€‚
+ * µ±ÎÒÃÇÔÚÐ´Ó¦ÓÃ³ÌÐòµÄÊ±ºò£¬¿ÉÄÜÐèÒªÓÃµ½Ò»Ð©È«¾Ö±äÁ¿¡£
  */
 DHT11_Data_TypeDef DHT11_Data;
 
 /*
 *************************************************************************
-*                             å‡½æ•°å£°æ˜Ž
+*                             º¯ÊýÉùÃ÷
 *************************************************************************
 */
-static void AppTaskCreate(void);/* ç”¨äºŽåˆ›å»ºä»»åŠ¡ */
+static void AppTaskCreate(void);/* ÓÃÓÚ´´½¨ÈÎÎñ */
 
-static void DHT11_Task(void* pvParameters);/* TaskDHT11ä»»åŠ¡å®žçŽ° */
-static void Weight_Task(void* pvParameters);/* Weight_Task_Taskä»»åŠ¡å®žçŽ° */
+static void DHT11_Task(void* pvParameters);/* TaskDHT11ÈÎÎñÊµÏÖ */
+static void Weight_Task(void* pvParameters);/* Weight_Task_TaskÈÎÎñÊµÏÖ */
 static void dispaly_Task(void* pvParameters);
 
-static void BSP_Init(void);/* ç”¨äºŽåˆå§‹åŒ–æ¿è½½ç›¸å…³èµ„æº */
+static void BSP_Init(void);/* ÓÃÓÚ³õÊ¼»¯°åÔØÏà¹Ø×ÊÔ´ */
 
 /*****************************************************************
-  * @brief  ä¸»å‡½æ•°
-  * @param  æ— 
-  * @retval æ— 
-  * @note   ç¬¬ä¸€æ­¥ï¼šå¼€å‘æ¿ç¡¬ä»¶åˆå§‹åŒ– 
-            ç¬¬äºŒæ­¥ï¼šåˆ›å»ºAPPåº”ç”¨ä»»åŠ¡
-            ç¬¬ä¸‰æ­¥ï¼šå¯åŠ¨FreeRTOSï¼Œå¼€å§‹å¤šä»»åŠ¡è°ƒåº¦
+  * @brief  Ö÷º¯Êý
+  * @param  ÎÞ
+  * @retval ÎÞ
+  * @note   µÚÒ»²½£º¿ª·¢°åÓ²¼þ³õÊ¼»¯ 
+            µÚ¶þ²½£º´´½¨APPÓ¦ÓÃÈÎÎñ
+            µÚÈý²½£ºÆô¶¯FreeRTOS£¬¿ªÊ¼¶àÈÎÎñµ÷¶È
   ****************************************************************/
 int main(void)
 {	
-  BaseType_t xReturn = pdPASS;/* å®šä¹‰ä¸€ä¸ªåˆ›å»ºä¿¡æ¯è¿”å›žå€¼ï¼Œé»˜è®¤ä¸ºpdPASS */
+  BaseType_t xReturn = pdPASS;/* ¶¨ÒåÒ»¸ö´´½¨ÐÅÏ¢·µ»ØÖµ£¬Ä¬ÈÏÎªpdPASS */
 
-  /* å¼€å‘æ¿ç¡¬ä»¶åˆå§‹åŒ– */
+  /* ¿ª·¢°åÓ²¼þ³õÊ¼»¯ */
 	BSP_Init();
-   /* åˆ›å»ºAppTaskCreateä»»åŠ¡ */
-  xReturn = xTaskCreate((TaskFunction_t )AppTaskCreate,  /* ä»»åŠ¡å…¥å£å‡½æ•° */
-                        (const char*    )"AppTaskCreate",/* ä»»åŠ¡åå­— */
-                        (uint16_t       )512,  /* ä»»åŠ¡æ ˆå¤§å° */
-                        (void*          )NULL,/* ä»»åŠ¡å…¥å£å‡½æ•°å‚æ•° */
-                        (UBaseType_t    )1, /* ä»»åŠ¡çš„ä¼˜å…ˆçº§ */
-                        (TaskHandle_t*  )&AppTaskCreate_Handle);/* ä»»åŠ¡æŽ§åˆ¶å—æŒ‡é’ˆ */ 
-  /* å¯åŠ¨ä»»åŠ¡è°ƒåº¦ */           
+   /* ´´½¨AppTaskCreateÈÎÎñ */
+  xReturn = xTaskCreate((TaskFunction_t )AppTaskCreate,  /* ÈÎÎñÈë¿Úº¯Êý */
+                        (const char*    )"AppTaskCreate",/* ÈÎÎñÃû×Ö */
+                        (uint16_t       )512,  /* ÈÎÎñÕ»´óÐ¡ */
+                        (void*          )NULL,/* ÈÎÎñÈë¿Úº¯Êý²ÎÊý */
+                        (UBaseType_t    )1, /* ÈÎÎñµÄÓÅÏÈ¼¶ */
+                        (TaskHandle_t*  )&AppTaskCreate_Handle);/* ÈÎÎñ¿ØÖÆ¿éÖ¸Õë */ 
+  /* Æô¶¯ÈÎÎñµ÷¶È */           
   if(pdPASS == xReturn)
-    vTaskStartScheduler();   /* å¯åŠ¨ä»»åŠ¡ï¼Œå¼€å¯è°ƒåº¦ */
+    vTaskStartScheduler();   /* Æô¶¯ÈÎÎñ£¬¿ªÆôµ÷¶È */
   else
     return -1;  
   
-  while(1);   /* æ­£å¸¸ä¸ä¼šæ‰§è¡Œåˆ°è¿™é‡Œ */    
+  while(1);   /* Õý³£²»»áÖ´ÐÐµ½ÕâÀï */    
 }
 
 
 /***********************************************************************
-  * @ å‡½æ•°å  ï¼š AppTaskCreate
-  * @ åŠŸèƒ½è¯´æ˜Žï¼š ä¸ºäº†æ–¹ä¾¿ç®¡ç†ï¼Œæ‰€æœ‰çš„ä»»åŠ¡åˆ›å»ºå‡½æ•°éƒ½æ”¾åœ¨è¿™ä¸ªå‡½æ•°é‡Œé¢
-  * @ å‚æ•°    ï¼š æ—   
-  * @ è¿”å›žå€¼  ï¼š æ— 
+  * @ º¯ÊýÃû  £º AppTaskCreate
+  * @ ¹¦ÄÜËµÃ÷£º ÎªÁË·½±ã¹ÜÀí£¬ËùÓÐµÄÈÎÎñ´´½¨º¯Êý¶¼·ÅÔÚÕâ¸öº¯ÊýÀïÃæ
+  * @ ²ÎÊý    £º ÎÞ  
+  * @ ·µ»ØÖµ  £º ÎÞ
   **********************************************************************/
 static void AppTaskCreate(void)
 {
-  BaseType_t xReturn = pdPASS;/* å®šä¹‰ä¸€ä¸ªåˆ›å»ºä¿¡æ¯è¿”å›žå€¼ï¼Œé»˜è®¤ä¸ºpdPASS */
+  BaseType_t xReturn = pdPASS;/* ¶¨ÒåÒ»¸ö´´½¨ÐÅÏ¢·µ»ØÖµ£¬Ä¬ÈÏÎªpdPASS */
   
-  taskENTER_CRITICAL();           //è¿›å…¥ä¸´ç•ŒåŒº
+  taskENTER_CRITICAL();           //½øÈëÁÙ½çÇø
   
-  /* åˆ›å»ºDHT11_Taskä»»åŠ¡ */
-  xReturn = xTaskCreate((TaskFunction_t )DHT11_Task, /* ä»»åŠ¡å…¥å£å‡½æ•° */
-                        (const char*    )"DHT11_Task",/* ä»»åŠ¡åå­— */
-                        (uint16_t       )512,   /* ä»»åŠ¡æ ˆå¤§å° */
-                        (void*          )NULL,	/* ä»»åŠ¡å…¥å£å‡½æ•°å‚æ•° */
-                        (UBaseType_t    )2,	    /* ä»»åŠ¡çš„ä¼˜å…ˆçº§ */
-                        (TaskHandle_t*  )&DHT11_Task_Handle);/* ä»»åŠ¡æŽ§åˆ¶å—æŒ‡é’ˆ */
+  /* ´´½¨DHT11_TaskÈÎÎñ */
+  xReturn = xTaskCreate((TaskFunction_t )DHT11_Task, /* ÈÎÎñÈë¿Úº¯Êý */
+                        (const char*    )"DHT11_Task",/* ÈÎÎñÃû×Ö */
+                        (uint16_t       )512,   /* ÈÎÎñÕ»´óÐ¡ */
+                        (void*          )NULL,	/* ÈÎÎñÈë¿Úº¯Êý²ÎÊý */
+                        (UBaseType_t    )2,	    /* ÈÎÎñµÄÓÅÏÈ¼¶ */
+                        (TaskHandle_t*  )&DHT11_Task_Handle);/* ÈÎÎñ¿ØÖÆ¿éÖ¸Õë */
   if(pdPASS == xReturn)
-    INFO("åˆ›å»ºDHT11_Taskä»»åŠ¡æˆåŠŸ!\r\n");
+    INFO("´´½¨DHT11_TaskÈÎÎñ³É¹¦!\r\n");
   
-	/* åˆ›å»ºTaskä»»åŠ¡ */
-  xReturn = xTaskCreate((TaskFunction_t )Weight_Task, /* ä»»åŠ¡å…¥å£å‡½æ•° */
-                        (const char*    )"Weight_Task",/* ä»»åŠ¡åå­— */
-                        (uint16_t       )512,   /* ä»»åŠ¡æ ˆå¤§å° */
-                        (void*          )NULL,	/* ä»»åŠ¡å…¥å£å‡½æ•°å‚æ•° */
-                        (UBaseType_t    )3,	    /* ä»»åŠ¡çš„ä¼˜å…ˆçº§ */
-                        (TaskHandle_t*  )&Weight_Task_Handle);/* ä»»åŠ¡æŽ§åˆ¶å—æŒ‡é’ˆ */
+	/* ´´½¨TaskÈÎÎñ */
+  xReturn = xTaskCreate((TaskFunction_t )Weight_Task, /* ÈÎÎñÈë¿Úº¯Êý */
+                        (const char*    )"Weight_Task",/* ÈÎÎñÃû×Ö */
+                        (uint16_t       )512,   /* ÈÎÎñÕ»´óÐ¡ */
+                        (void*          )NULL,	/* ÈÎÎñÈë¿Úº¯Êý²ÎÊý */
+                        (UBaseType_t    )3,	    /* ÈÎÎñµÄÓÅÏÈ¼¶ */
+                        (TaskHandle_t*  )&Weight_Task_Handle);/* ÈÎÎñ¿ØÖÆ¿éÖ¸Õë */
   if(pdPASS == xReturn)
-    INFO("åˆ›å»ºWeight_Taskä»»åŠ¡æˆåŠŸ!\r\n");
+    INFO("´´½¨Weight_TaskÈÎÎñ³É¹¦!\r\n");
   
-   xReturn = xTaskCreate((TaskFunction_t )dispaly_Task, /* ä»»åŠ¡å…¥å£å‡½æ•° */
-                        (const char*    )"dispaly_Task",/* ä»»åŠ¡åå­— */
-                        (uint16_t       )512,   /* ä»»åŠ¡æ ˆå¤§å° */
-                        (void*          )NULL,	/* ä»»åŠ¡å…¥å£å‡½æ•°å‚æ•° */
-                        (UBaseType_t    )1,	    /* ä»»åŠ¡çš„ä¼˜å…ˆçº§ */
-                        (TaskHandle_t*  )&dispaly_Task_Handle);/* ä»»åŠ¡æŽ§åˆ¶å—æŒ‡é’ˆ */
+   xReturn = xTaskCreate((TaskFunction_t )dispaly_Task, /* ÈÎÎñÈë¿Úº¯Êý */
+                        (const char*    )"dispaly_Task",/* ÈÎÎñÃû×Ö */
+                        (uint16_t       )512,   /* ÈÎÎñÕ»´óÐ¡ */
+                        (void*          )NULL,	/* ÈÎÎñÈë¿Úº¯Êý²ÎÊý */
+                        (UBaseType_t    )1,	    /* ÈÎÎñµÄÓÅÏÈ¼¶ */
+                        (TaskHandle_t*  )&dispaly_Task_Handle);/* ÈÎÎñ¿ØÖÆ¿éÖ¸Õë */
   if(pdPASS == xReturn)
-    INFO("åˆ›å»ºWeight_Taskä»»åŠ¡æˆåŠŸ!\r\n");
+    INFO("´´½¨Weight_TaskÈÎÎñ³É¹¦!\r\n");
 
 
-  vTaskDelete(AppTaskCreate_Handle); //åˆ é™¤AppTaskCreateä»»åŠ¡
+  vTaskDelete(AppTaskCreate_Handle); //É¾³ýAppTaskCreateÈÎÎñ
   
-  taskEXIT_CRITICAL();            //é€€å‡ºä¸´ç•ŒåŒº
+  taskEXIT_CRITICAL();            //ÍË³öÁÙ½çÇø
 }
 
 
@@ -134,7 +129,7 @@ static void DHT11_Task(void* parameter)
     {
         if  ( DHT11_Read_TempAndHumidity ( & DHT11_Data ) == SUCCESS)
 			{
-				printf("æ¹¿åº¦ä¸º%d.%d ï¼…RH ï¼Œæ¸©åº¦ä¸º %d.%dâ„ƒ \r\n",\
+				printf("Êª¶ÈÎª%d.%d £¥RH £¬ÎÂ¶ÈÎª %d.%d¡æ \r\n",\
 				DHT11_Data.humi_int,DHT11_Data.humi_deci,DHT11_Data.temp_int,DHT11_Data.temp_deci);
 			}			
 		else
@@ -146,23 +141,23 @@ static void DHT11_Task(void* parameter)
 }
 
 /**********************************************************************
-  * @ å‡½æ•°å  ï¼š Weight_Task
-  * @ åŠŸèƒ½è¯´æ˜Žï¼š Weight_Taskä»»åŠ¡ä¸»ä½“
-  * @ å‚æ•°    ï¼š   
-  * @ è¿”å›žå€¼  ï¼š æ— 
+  * @ º¯ÊýÃû  £º Weight_Task
+  * @ ¹¦ÄÜËµÃ÷£º Weight_TaskÈÎÎñÖ÷Ìå
+  * @ ²ÎÊý    £º   
+  * @ ·µ»ØÖµ  £º ÎÞ
   ********************************************************************/
 static void Weight_Task(void* parameter)
 {	
     while (1)
     {
-      vTaskDelay(2000);    //å‘é€å¤ªå¿«äº†
-      Get_Weight();			//ç§°é‡
+      vTaskDelay(2000);    //·¢ËÍÌ«¿ìÁË
+      Get_Weight();			//³ÆÖØ
       Scan_Key();
-      //æ˜¾ç¤ºå½“å‰é‡é‡
+      //ÏÔÊ¾µ±Ç°ÖØÁ¿
       if( Flag_ERROR == 1)
       {
-        printf("ERROR-->è¶…é‡\n");
-        buzzer_on;                        //è¿˜å¯ä»¥æ”¹ä¸€ä¸‹ï¼Œä¸€ç›´å«ï¼Œä¸‹é¢elseæ‰å…³--------------------------------
+        printf("ERROR-->³¬ÖØ\n");
+        buzzer_on;                        //»¹¿ÉÒÔ¸ÄÒ»ÏÂ£¬Ò»Ö±½Ð£¬ÏÂÃæelse²Å¹Ø--------------------------------
         LED_RED;
       }		
       else
@@ -178,6 +173,7 @@ static void Weight_Task(void* parameter)
         printf("%ld",(Weight_Shiwu%10));
         printf(" g\n");
         buzzer_off;
+        LED_RGBOFF;
 			}
     }
 }
@@ -187,21 +183,21 @@ static void display_Task(void* parameter)
 {	
     while (1)
     {
-      //--------------------
+      //--------------------´ý×ö
     }
 }
 /***********************************************************************
-  * @ å‡½æ•°å  ï¼š BSP_Init
-  * @ åŠŸèƒ½è¯´æ˜Žï¼š æ¿çº§å¤–è®¾åˆå§‹åŒ–ï¼Œæ‰€æœ‰æ¿å­ä¸Šçš„åˆå§‹åŒ–å‡å¯æ”¾åœ¨è¿™ä¸ªå‡½æ•°é‡Œé¢
-  * @ å‚æ•°    ï¼š   
-  * @ è¿”å›žå€¼  ï¼š æ— 
+  * @ º¯ÊýÃû  £º BSP_Init
+  * @ ¹¦ÄÜËµÃ÷£º °å¼¶ÍâÉè³õÊ¼»¯£¬ËùÓÐ°å×ÓÉÏµÄ³õÊ¼»¯¾ù¿É·ÅÔÚÕâ¸öº¯ÊýÀïÃæ
+  * @ ²ÎÊý    £º   
+  * @ ·µ»ØÖµ  £º ÎÞ
   *********************************************************************/
 static void BSP_Init(void)
 {
 	/*
-	 * STM32ä¸­æ–­ä¼˜å…ˆçº§åˆ†ç»„ä¸º4ï¼Œå³4bitéƒ½ç”¨æ¥è¡¨ç¤ºæŠ¢å ä¼˜å…ˆçº§ï¼ŒèŒƒå›´ä¸ºï¼š0~15
-	 * ä¼˜å…ˆçº§åˆ†ç»„åªéœ€è¦åˆ†ç»„ä¸€æ¬¡å³å¯ï¼Œä»¥åŽå¦‚æžœæœ‰å…¶ä»–çš„ä»»åŠ¡éœ€è¦ç”¨åˆ°ä¸­æ–­ï¼Œ
-	 * éƒ½ç»Ÿä¸€ç”¨è¿™ä¸ªä¼˜å…ˆçº§åˆ†ç»„ï¼Œåƒä¸‡ä¸è¦å†åˆ†ç»„ï¼Œåˆ‡å¿Œã€‚
+	 * STM32ÖÐ¶ÏÓÅÏÈ¼¶·Ö×éÎª4£¬¼´4bit¶¼ÓÃÀ´±íÊ¾ÇÀÕ¼ÓÅÏÈ¼¶£¬·¶Î§Îª£º0~15
+	 * ÓÅÏÈ¼¶·Ö×éÖ»ÐèÒª·Ö×éÒ»´Î¼´¿É£¬ÒÔºóÈç¹ûÓÐÆäËûµÄÈÎÎñÐèÒªÓÃµ½ÖÐ¶Ï£¬
+	 * ¶¼Í³Ò»ÓÃÕâ¸öÓÅÏÈ¼¶·Ö×é£¬Ç§Íò²»ÒªÔÙ·Ö×é£¬ÇÐ¼É¡£
 	 */
 	NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
 
@@ -212,10 +208,12 @@ static void BSP_Init(void)
 	dmziig_init();	
 	buzzer_GPIO_Config();
 	DHT11_Init();
-	printf("ç¡¬ä»¶åˆå§‹åŒ–æˆåŠŸ\n");
-	printf("ä½   å¥½  å…°  å“¥\n");
-	printf("---------------------------------");
-	printf("\n");
+  I2C_GPIO_Config();
+  LCD_Init();
+	INFO("Ó²¼þ³õÊ¼»¯³É¹¦\n");
+	INFO("Äã  ºÃ  À¼  ¸ç\n");
+	INFO("---------------------------------\n");
+	
 }
 
 /********************************END OF FILE****************************/

@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "mylog.h": "c",
-        "bsp_dht11.h": "c"
+        "bsp_dht11.h": "c",
+        "draw_api.h": "c",
+        "test.h": "c",
+        "lcd.h": "c",
+        "i2c_soft.h": "c",
+        "bsp_dmziig.h": "c",
+        "oled_draw_ex_example.h": "c",
+        "sys.h": "c",
+        "bsp_key.h": "c"
     }
 }

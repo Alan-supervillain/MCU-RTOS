@@ -4,7 +4,7 @@
 
 #include "stm32f10x.h"
 
-//  Òý½Å¶¨Òå
+//  ï¿½ï¿½ï¿½Å¶ï¿½ï¿½ï¿½
 #define    KEY1_GPIO_CLK     RCC_APB2Periph_GPIOA
 #define    KEY1_GPIO_PORT    GPIOA			   
 #define    KEY1_GPIO_PIN		 GPIO_Pin_0
@@ -14,16 +14,16 @@
 #define    KEY2_GPIO_PIN		  GPIO_Pin_13
 
 
- /** °´¼ü°´ÏÂ±êÖÃºê
-	*  °´¼ü°´ÏÂÎª¸ßµçÆ½£¬ÉèÖÃ KEY_ON=1£¬ KEY_OFF=0
-	*  Èô°´¼ü°´ÏÂÎªµÍµçÆ½£¬°ÑºêÉèÖÃ³ÉKEY_ON=0 £¬KEY_OFF=1 ¼´¿É
+ /** ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½Ãºï¿½
+	*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ßµï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ KEY_ON=1ï¿½ï¿½ KEY_OFF=0
+	*  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Íµï¿½Æ½ï¿½ï¿½ï¿½Ñºï¿½ï¿½ï¿½ï¿½Ã³ï¿½KEY_ON=0 ï¿½ï¿½KEY_OFF=1 ï¿½ï¿½ï¿½ï¿½
 	*/
 #define KEY_ON	1
 #define KEY_OFF	0
 
 void Key_GPIO_Config(void);
 uint8_t Key_Scan(GPIO_TypeDef* GPIOx,uint16_t GPIO_Pin);
-
+void Scan_Key(void);
 
 #endif /* __KEY_H */
 

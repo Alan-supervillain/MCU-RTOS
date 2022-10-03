@@ -102,7 +102,7 @@ static void AppTaskCreate(void)
                             (UBaseType_t ) QUEUE_SIZE);/* 消息的大小 */
   if(NULL != my_Queue)
     INFO("创建my_Queue消息队列成功!\r\n");
-  
+  /*DHT11先获取数据 然后vtaskdelay weight和 display_Task相同优先级*/
   /* 创建DHT11_Task任务 */
   xReturn = xTaskCreate((TaskFunction_t )DHT11_Task, /* 任务入口函数 */
                         (const char*    )"DHT11_Task",/* 任务名字 */

@@ -1,6 +1,6 @@
 /*
 作者：alan
-邮箱：3096141163@com
+邮箱：3096141163@qq.com
 */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -108,7 +108,7 @@ static void AppTaskCreate(void)
                         (const char*    )"DHT11_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )2,	    /* 任务的优先级 */
+                        (UBaseType_t    )3,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&DHT11_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建DHT11_Task任务成功!\r\n");
@@ -118,7 +118,7 @@ static void AppTaskCreate(void)
                         (const char*    )"Weight_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )3,	    /* 任务的优先级 */
+                        (UBaseType_t    )2,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&Weight_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建Weight_Task任务成功!\r\n");
@@ -127,7 +127,7 @@ static void AppTaskCreate(void)
                         (const char*    )"display_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )1,	    /* 任务的优先级 */
+                        (UBaseType_t    )2,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&display_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建display_Task任务成功!\r\n");
@@ -151,7 +151,7 @@ static void DHT11_Task(void* parameter)
 			{
 				printf("Read DHT11 ERROR!\r\n");
 			}
-			  vTaskDelay(2000);
+			vTaskDelay(1000);
     }
 }
 
@@ -189,19 +189,19 @@ static void Weight_Task(void* parameter)
               Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu%100/10 + 0X30));
               Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu%10 + 0X30));
         */
-        printf("%ld",(Weight_Shiwu/1000));
-        printf("%ld",(Weight_Shiwu%1000/100));
-        printf("%ld",(Weight_Shiwu%100/10));
-        printf("%ld",(Weight_Shiwu%10));
-        printf(" g\n");
         wei_4=(Weight_Shiwu/1000);    
         wei_3=(Weight_Shiwu%1000/100);
         wei_2=(Weight_Shiwu%100/10);
         wei_1=(Weight_Shiwu%10);
+        printf("%ld",wei_4);
+        printf("%ld",wei_3);
+        printf("%ld",wei_2);
+        printf("%ld",wei_1);
+        printf(" g\n");
         xReturn = xQueueSend( my_Queue, /* 消息队列的句柄 */
                               &wei_4,/* 发送的消息内容 */
                               0 );        /* 等待时间 0 */
-                                                           if(pdPASS == xReturn)INFO("消息wei_4发送成功!\n");else INFO("消息wei_4发送失败!\n");
+                                                         if(pdPASS == xReturn)INFO("消息wei_4发送成功!\n");else INFO("消息wei_4发送失败!\n");
         xReturn = xQueueSend( my_Queue, &wei_3, 0 );     if(pdPASS == xReturn)INFO("消息wei_3发送成功!\n");else INFO("消息wei_3发送失败!\n");
         xReturn = xQueueSend( my_Queue, &wei_2, 0 );     if(pdPASS == xReturn)INFO("消息wei_2发送成功!\n");else INFO("消息wei_2发送失败!\n");
         xReturn = xQueueSend( my_Queue, &wei_1, 0 );     if(pdPASS == xReturn)INFO("消息wei_1发送成功!\n");else INFO("消息wei_1发送失败!\n");

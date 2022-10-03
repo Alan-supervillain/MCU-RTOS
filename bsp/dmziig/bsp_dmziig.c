@@ -7,7 +7,7 @@
 //#include  <stdbool.h>
 //static unsigned long HX711_Buffer = 0;
 unsigned long Weight_Maopi = 0;
-long Weight_Shiwu = 0;
+long Weight_Shiwu = 0;  //4个字节
 //static unsigned char flag = 0;
 //static bool Flag_ERROR = 0;//  原来是bit Flag_ERROR = 0;用布尔类型替换51 c中bit
 char Flag_ERROR = 0;

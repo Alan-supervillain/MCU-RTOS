@@ -10,6 +10,22 @@
         "oled_draw_ex_example.h": "c",
         "sys.h": "c",
         "bsp_key.h": "c",
-        "delay.h": "c"
+        "delay.h": "c",
+        "draw.h": "c",
+        "typedefs.h": "c",
+        "beep.h": "c",
+        "gui_log_console.h": "c",
+        "common.h": "c",
+        "config.h": "c",
+        "util.h": "c",
+        "debug.h": "c",
+        "buttons.h": "c",
+        "millis.h": "c",
+        "game1.h": "c",
+        "global.h": "c",
+        "oled_driver.h": "c",
+        "oled_config.h": "c",
+        "oled_basic.h": "c",
+        "oled.h": "c"
     }
 }

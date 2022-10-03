@@ -1,12 +1,11 @@
+#if  0   //弃用这个方案了  先放着
 #include "i2c_soft.h"
 #include "delay.h"
 
 void I2C_GPIO_Config(void)  
 {  
     GPIO_InitTypeDef  GPIO_InitStructure;  
-          
-    RCC_APB2PeriphClockCmd(SCL_RCC_CLOCK | SDA_RCC_CLOCK ,ENABLE);
-          
+    RCC_APB2PeriphClockCmd(SCL_RCC_CLOCK | SDA_RCC_CLOCK ,ENABLE);   
     //初始化SCL管脚  
     GPIO_InitStructure.GPIO_Pin =  SCL_PIN;  
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
@@ -216,3 +215,4 @@ unsigned char Single_Read(unsigned char SlaveAddress,unsigned char REG_Address)
 
 }	
 
+#endif

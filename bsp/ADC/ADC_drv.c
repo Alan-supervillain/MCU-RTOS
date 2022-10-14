@@ -11,10 +11,10 @@ void ADC_InitConfig()
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	ADC_InitTypeDef ADC_InitStruct;
-    //1，开启gpioa、adc1时钟，设置pc1为模拟输入
+    //1，开启gpioc、adc1时钟，设置pc2为模拟输入
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC|RCC_APB2Periph_ADC1|RCC_APB2Periph_AFIO,ENABLE);
 	
-	GPIO_InitStruct.GPIO_Pin=GPIO_Pin_0;
+	GPIO_InitStruct.GPIO_Pin=GPIO_Pin_2;
 	GPIO_InitStruct.GPIO_Mode=GPIO_Mode_AIN;
 	GPIO_Init(GPIOC,&GPIO_InitStruct);      //
 
@@ -62,7 +62,7 @@ void ADC_InitConfig()
 u16 Get_Adc(void)   
 {
    //设置指定ADC的规则组通道，一个序列，采样时间
- ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 1, ADC_SampleTime_239Cycles5 ); //ADC1,ADC通道,采样时间为239.5周期          
+ ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 1, ADC_SampleTime_239Cycles5 ); //ADC1,ADC通道,采样时间为239.5周期          
   
  ADC_SoftwareStartConvCmd(ADC1, ENABLE);  //使能指定的ADC1的软件转换启动功能 
   

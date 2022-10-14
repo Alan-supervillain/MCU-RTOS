@@ -17,6 +17,10 @@
 #include "bmp.h"
 #include "queue.h"
 #include "ADC_drv.h"
+
+#define waring_numb   900           //烟雾报警设定值
+#define waring_temp   40             //高温报警
+
 static TaskHandle_t AppTaskCreate_Handle = NULL;
 static TaskHandle_t DHT11_Task_Handle = NULL;
 /* Weight_Task任务句柄 */
@@ -25,16 +29,7 @@ static TaskHandle_t Weight_Task_Handle = NULL;
 static TaskHandle_t display_Task_Handle = NULL;
 static TaskHandle_t MQ2_Task_Handle = NULL;//ADC外设  烟雾传感器任务
 /********************************** 内核对象句柄 *********************************/
-/*
- * 信号量，消息队列，事件标志组，软件定时器这些都属于内核的对象，要想使用这些内核
- * 对象，必须先创建，创建成功之后会返回一个相应的句柄。实际上就是一个指针，后续我
- * 们就可以通过这个句柄操作这些内核对象。
- *
- * 内核对象说白了就是一种全局的数据结构，通过这些数据结构我们可以实现任务间的通信，
- * 任务间的事件同步等各种功能。至于这些功能的实现我们是通过调用这些内核对象的函数
- * 来完成的
- * 
- */
+
 QueueHandle_t my_Queue =NULL;    //用的FIFO
 #define  QUEUE_LEN    4   /* 队列的长度，最大可包含多少个消息 */
 #define  QUEUE_SIZE   4   /* 队列中每个消息大小（字节） */
@@ -159,6 +154,11 @@ static void DHT11_Task(void* parameter)
 			{
 				printf("湿度为%d.%d ％RH ，温度为 %d.%d℃ \r\n",\
 				DHT11_Data.humi_int,DHT11_Data.humi_deci,DHT11_Data.temp_int,DHT11_Data.temp_deci);
+        if(DHT11_Data.temp_int > waring_temp)
+        {
+            buzzer_on;
+            LED_RED;
+        }
 			}			
 		else
 			{
@@ -190,7 +190,7 @@ static void Weight_Task(void* parameter)
       if( Flag_ERROR == 1)
       {
         printf("ERROR-->超重\n");
-        //buzzer_on;   测试的时候太吵了 关了算了 led_red 替代！！                           
+        buzzer_on;                            
         LED_RED;                 WARN("这里涉及到互斥锁对资源的管理 在下一个else要设计但是还没写的");
 
       }		
@@ -213,23 +213,24 @@ static void Weight_Task(void* parameter)
         xReturn = xQueueSend( my_Queue, &wei_3, 0 );     if(pdPASS == xReturn){INFO("消息wei_3发送成功!\n");}else {INFO("消息wei_3发送失败!\n");}
         xReturn = xQueueSend( my_Queue, &wei_2, 0 );     if(pdPASS == xReturn){INFO("消息wei_2发送成功!\n");}else {INFO("消息wei_2发送失败!\n");}
         xReturn = xQueueSend( my_Queue, &wei_1, 0 );     if(pdPASS == xReturn){INFO("消息wei_1发送成功!\n");}else {INFO("消息wei_1发送失败!\n");}
-        //buzzer_off;
-        LED_RGBOFF;
+        //业务逻辑 如果三个传感器都不超标则关闭buzzer 此代码块之前的压力传感器已经不超了
+        if((somke<=waring_numb)&&(DHT11_Data.temp_int<waring_temp)){
+            buzzer_off;
+            LED_RGBOFF;
+        }
         vTaskDelay(500);    //发送太快了
 			}
     }
 }
 static void MQ2_Task(void* pvParameters){
-    #define wring_numb   900
     for(;;)
     {
       somke = Get_Adc();
 		  printf("烟雾浓度是%d\n",somke);
-      if(somke > wring_numb)
+      if(somke > waring_numb){
           buzzer_on;
-      else  
-          //buzzer_off;
-          WARN("逻辑还有点瑕疵，涉及到对蜂鸣器的资源的竞争，先暂时不弄，下次提交完善这个");
+          LED_RED;
+      }
       vTaskDelay(500);
     }
 }

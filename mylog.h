@@ -14,7 +14,7 @@
 #define LOG_LEVEL  LOG_LEVEL_MAX
 #endif
 //已经自带换行符了
-//临界区防止printf被打断导致 log混乱甚至乱码
+//临界区防止printf被打断导致log混乱甚至乱码
 #define printf(fmt, arg...)  taskENTER_CRITICAL();printf( fmt , ## arg);taskEXIT_CRITICAL()    
 
 #if LOG_LEVEL >= 1

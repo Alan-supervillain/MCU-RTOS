@@ -1,12 +1,12 @@
 #ifndef   BUZZER_H
-#define	  BUZZER_H
+#define   BUZZER_H
 
 #include "stm32f10x.h"
 
 
 #define buzzer_GPIO_PORT    							GPIOC			              /* GPIO¶Ë¿Ú */
 #define buzzer_GPIO_CLK 	    						RCC_APB2Periph_GPIOC		/* GPIO¶Ë¿ÚÊ±ÖÓ */
-#define buzzer_GPIO_PIN										GPIO_Pin_0	
+#define buzzer_GPIO_PIN								GPIO_Pin_0	
 
 
 

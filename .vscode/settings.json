@@ -26,6 +26,7 @@
         "oled_driver.h": "c",
         "oled_config.h": "c",
         "oled_basic.h": "c",
-        "oled.h": "c"
+        "oled.h": "c",
+        "buzzer.h": "c"
     }
 }

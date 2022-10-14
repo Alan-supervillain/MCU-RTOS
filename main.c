@@ -9,19 +9,21 @@
 #include "bsp_key.h"
 #include "buzzer.h"
 #include "bsp_dmziig.h"//电子秤双拼
-#include "mylog.h"     //日志库等级版
+#include "mylog.h"     //日志库等级版  INFO 一般用于打印些状态信息方便阅读  而WARN是调试用的 警告级别的
 #include "bsp_dht11.h"
 #include "delay.h"
 #include "sys.h"
 #include "oled.h"
 #include "bmp.h"
 #include "queue.h"
+#include "ADC_drv.h"
 static TaskHandle_t AppTaskCreate_Handle = NULL;
 static TaskHandle_t DHT11_Task_Handle = NULL;
 /* Weight_Task任务句柄 */
 static TaskHandle_t Weight_Task_Handle = NULL;
 /* 显示屏任务句柄 */
 static TaskHandle_t display_Task_Handle = NULL;
+static TaskHandle_t MQ2_Task_Handle = NULL;//ADC外设  烟雾传感器任务
 /********************************** 内核对象句柄 *********************************/
 /*
  * 信号量，消息队列，事件标志组，软件定时器这些都属于内核的对象，要想使用这些内核
@@ -42,6 +44,7 @@ QueueHandle_t my_Queue =NULL;    //用的FIFO
  * 当我们在写应用程序的时候，可能需要用到一些全局变量。
  */
 DHT11_Data_TypeDef DHT11_Data;
+uint16_t somke ;//烟雾浓度
 
 /*
 *************************************************************************
@@ -53,6 +56,7 @@ static void AppTaskCreate(void);/* 用于创建任务 */
 static void DHT11_Task(void* pvParameters);/* TaskDHT11任务实现 */
 static void Weight_Task(void* pvParameters);/* Weight_Task_Task任务实现 */
 static void display_Task(void* pvParameters);
+static void MQ2_Task(void* pvParameters);
 
 static void BSP_Init(void);/* 用于初始化板载相关资源 */
 
@@ -108,7 +112,7 @@ static void AppTaskCreate(void)
                         (const char*    )"DHT11_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )3,	    /* 任务的优先级 */
+                        (UBaseType_t    )4,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&DHT11_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建DHT11_Task任务成功!\r\n");
@@ -118,7 +122,7 @@ static void AppTaskCreate(void)
                         (const char*    )"Weight_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )2,	    /* 任务的优先级 */
+                        (UBaseType_t    )3,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&Weight_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建Weight_Task任务成功!\r\n");
@@ -127,10 +131,19 @@ static void AppTaskCreate(void)
                         (const char*    )"display_Task",/* 任务名字 */
                         (uint16_t       )512,   /* 任务栈大小 */
                         (void*          )NULL,	/* 任务入口函数参数 */
-                        (UBaseType_t    )2,	    /* 任务的优先级 */
+                        (UBaseType_t    )1,	    /* 任务的优先级 */
                         (TaskHandle_t*  )&display_Task_Handle);/* 任务控制块指针 */
   if(pdPASS == xReturn)
     INFO("创建display_Task任务成功!\r\n");
+
+   xReturn = xTaskCreate((TaskFunction_t )MQ2_Task, /* 任务入口函数 */
+                        (const char*    )"MQ2_Task",/* 任务名字 */
+                        (uint16_t       )512,   /* 任务栈大小 */
+                        (void*          )NULL,	/* 任务入口函数参数 */
+                        (UBaseType_t    )2,	    /* 任务的优先级 */
+                        (TaskHandle_t*  )&MQ2_Task_Handle);/* 任务控制块指针 */
+  if(pdPASS == xReturn)
+    INFO("创建MQ2_Task任务成功!\r\n");
 
 
   vTaskDelete(AppTaskCreate_Handle); //删除AppTaskCreate任务
@@ -171,7 +184,6 @@ static void Weight_Task(void* parameter)
     while (1)
     {
       Flag_ERROR =0;
-      vTaskDelay(500);    //发送太快了
       Get_Weight();			//称重
       Scan_Key();
       //显示当前重量
@@ -207,10 +219,24 @@ static void Weight_Task(void* parameter)
         xReturn = xQueueSend( my_Queue, &wei_1, 0 );     if(pdPASS == xReturn)INFO("消息wei_1发送成功!\n");else INFO("消息wei_1发送失败!\n");
         //buzzer_off;
         LED_RGBOFF;
+        vTaskDelay(500);    //发送太快了
 			}
     }
 }
-
+static void MQ2_Task(void* pvParameters){
+    #define wring_numb   900
+    for(;;)
+    {
+      somke = Get_Adc();
+		  printf("烟雾浓度是%d\n",somke);
+      if(somke > wring_numb)
+          buzzer_on;
+      else  
+          //buzzer_off;
+          WARN("逻辑还有点瑕疵，涉及到对蜂鸣器的资源的竞争，先暂时不弄，下次提交完善这个");
+      vTaskDelay(500);
+    }
+}
 static void display_Task(void* parameter)
 {	
       BaseType_t xReturn = pdTRUE;/* 定义一个创建信息返回值，默认为pdTRUE */
@@ -291,9 +317,10 @@ static void BSP_Init(void)
 	dmziig_init();	
 	buzzer_GPIO_Config();
 	DHT11_Init();
-  delay_init();	    	 
-  OLED_Init();
-  OLED_Clear();
+	delay_init();	    	 
+	OLED_Init();
+	ADC_InitConfig();
+	OLED_Clear();
 	INFO("硬件初始化成功\n");
 	INFO("你  好  兰  哥\n");
 	INFO("---------------------------------\n");

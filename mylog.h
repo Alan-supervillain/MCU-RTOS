@@ -8,39 +8,40 @@
 #define LOG_LEVEL_WARN    2
 #define LOG_LEVEL_ERR     1
 
-#define LOG_LEVEL_MAX     1      //----等级调节
+#define LOG_LEVEL_MAX     3      //----等级调节
 
 #ifndef LOG_LEVEL
 #define LOG_LEVEL  LOG_LEVEL_MAX
 #endif
-
+//已经自带换行符了
+//临界区防止log混乱
 #if LOG_LEVEL >= 1
-#define ERR(fmt, arg...)  printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg)    //已经自带了换行符了
+#define ERR(fmt, arg...)  taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()    
 #else
 #define ERR(fmt, arg...)
 #endif
 
 #if LOG_LEVEL >= 2
-#define WARN(fmt, arg...) printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg)
+#define WARN(fmt, arg...) taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()
 #else
 #define WARN(fmt, arg...)
 #endif
 
 #if LOG_LEVEL >= 3
-#define DBG(fmt, arg...) printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg)
+#define DBG(fmt, arg...) taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()
 #else
 #define DBG(fmt, arg...)
 #endif
 
 #if LOG_LEVEL >= 4
-#define INFO(fmt, arg...) printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg)
+#define INFO(fmt, arg...) taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()
 #else
 #define INFO(fmt, arg...)
 #endif
 
 
 #if LOG_LEVEL >= 5
-#define TRACE(fmt, arg...) printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg)
+#define TRACE(fmt, arg...) taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()
 #else
 #define TRACE(fmt, arg...)
 #endif

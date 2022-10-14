@@ -213,10 +213,10 @@ static void Weight_Task(void* parameter)
         xReturn = xQueueSend( my_Queue, /* 消息队列的句柄 */
                               &wei_4,/* 发送的消息内容 */
                               0 );        /* 等待时间 0 */
-                                                         if(pdPASS == xReturn)INFO("消息wei_4发送成功!\n");else INFO("消息wei_4发送失败!\n");
-        xReturn = xQueueSend( my_Queue, &wei_3, 0 );     if(pdPASS == xReturn)INFO("消息wei_3发送成功!\n");else INFO("消息wei_3发送失败!\n");
-        xReturn = xQueueSend( my_Queue, &wei_2, 0 );     if(pdPASS == xReturn)INFO("消息wei_2发送成功!\n");else INFO("消息wei_2发送失败!\n");
-        xReturn = xQueueSend( my_Queue, &wei_1, 0 );     if(pdPASS == xReturn)INFO("消息wei_1发送成功!\n");else INFO("消息wei_1发送失败!\n");
+                                                         if(pdPASS == xReturn){INFO("消息wei_4发送成功!\n");}else {INFO("消息wei_4发送失败!\n");}
+        xReturn = xQueueSend( my_Queue, &wei_3, 0 );     if(pdPASS == xReturn){INFO("消息wei_3发送成功!\n");}else {INFO("消息wei_3发送失败!\n");}
+        xReturn = xQueueSend( my_Queue, &wei_2, 0 );     if(pdPASS == xReturn){INFO("消息wei_2发送成功!\n");}else {INFO("消息wei_2发送失败!\n");}
+        xReturn = xQueueSend( my_Queue, &wei_1, 0 );     if(pdPASS == xReturn){INFO("消息wei_1发送成功!\n");}else {INFO("消息wei_1发送失败!\n");}
         //buzzer_off;
         LED_RGBOFF;
         vTaskDelay(500);    //发送太快了
@@ -286,10 +286,12 @@ static void display_Task(void* parameter)
       xReturn = xQueueReceive( my_Queue,    /* 消息队列的句柄 */
                                   &r_wei,      /* 发送的消息内容 */
                                   portMAX_DELAY); /* 等待时间 一直等 */                   
-      if(pdTRUE == xReturn)
+      if(pdTRUE == xReturn){
         DBG("本次接收到的数据是%d\n",r_wei);
-      else
+      }
+      else{
         DBG("数据接收出错,错误代码0x%lx\n",xReturn);
+      }
       OLED_ShowNum(48+x,line_3,r_wei,1,16);
       x+=10;
       if(x>30)x=0;

@@ -205,11 +205,7 @@ static void Weight_Task(void* parameter)
         wei_3=(Weight_Shiwu%1000/100);
         wei_2=(Weight_Shiwu%100/10);
         wei_1=(Weight_Shiwu%10);
-        printf("%ld",wei_4);
-        printf("%ld",wei_3);
-        printf("%ld",wei_2);
-        printf("%ld",wei_1);
-        printf(" g\n");
+        printf("%ld%ld%ld%ld g\n",wei_4,wei_3,wei_2,wei_1);
         xReturn = xQueueSend( my_Queue, /* 消息队列的句柄 */
                               &wei_4,/* 发送的消息内容 */
                               0 );        /* 等待时间 0 */

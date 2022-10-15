@@ -15,6 +15,7 @@
 #endif
 //已经自带换行符了
 //临界区防止printf被打断导致log混乱甚至乱码
+//因为这个函数替换不算，宏展开后不算单行了 也就不能省略{}了 编程的时候注意
 #define printf(fmt, arg...)  taskENTER_CRITICAL();printf( fmt , ## arg);taskEXIT_CRITICAL()    
 
 #if LOG_LEVEL >= 1
@@ -34,7 +35,7 @@
 #else
 #define DBG(fmt, arg...)
 #endif
-
+//用来查看运行状态的信息
 #if LOG_LEVEL >= 4
 #define INFO(fmt, arg...) taskENTER_CRITICAL();printf("[%s %s() line%d]:" fmt "\r\n",__FILE__,__func__,__LINE__, ## arg);taskEXIT_CRITICAL()
 #else

@@ -17,9 +17,15 @@
 #include "bmp.h"
 #include "queue.h"
 #include "ADC_drv.h"
+#include "event_groups.h"
+
+
+#define display_Task_EVENT  (0x01 << 0)//设置事件掩码的位0
+#define Weight_Task_EVENT   (0x01 << 1)//设置事件掩码的位1
+#define MQ2_Task_EVENT      (0x01 << 2)//设置事件掩码的位2
 
 #define waring_numb   900           //烟雾报警设定值
-#define waring_temp   40             //高温报警
+#define waring_temp   40            //高温报警设置值
 
 static TaskHandle_t AppTaskCreate_Handle = NULL;
 static TaskHandle_t DHT11_Task_Handle = NULL;
@@ -32,8 +38,10 @@ static TaskHandle_t MQ2_Task_Handle = NULL;//ADC外设  烟雾传感器任务
 
 QueueHandle_t my_Queue =NULL;    //用的FIFO
 #define  QUEUE_LEN    4   /* 队列的长度，最大可包含多少个消息 */
-#define  QUEUE_SIZE   4   /* 队列中每个消息大小（字节） */
-//刚好够用
+#define  QUEUE_SIZE   4   /* 队列中每个消息大小（字节） */ //刚好够用
+//事件组
+static EventGroupHandle_t Event_Handle =NULL;
+
 /******************************* 全局变量声明 ************************************/
 /*
  * 当我们在写应用程序的时候，可能需要用到一些全局变量。
@@ -96,6 +104,8 @@ static void AppTaskCreate(void)
   BaseType_t xReturn = pdPASS;/* 定义一个创建信息返回值，默认为pdPASS */
   
   taskENTER_CRITICAL();           //进入临界区
+  /* 创建 Event_Handle */
+  Event_Handle = xEventGroupCreate();
     /* 创建my_Queue */
   my_Queue = xQueueCreate((UBaseType_t ) QUEUE_LEN,/* 消息队列的长度 */
                             (UBaseType_t ) QUEUE_SIZE);/* 消息的大小 */
@@ -148,9 +158,10 @@ static void AppTaskCreate(void)
 
 static void DHT11_Task(void* parameter)
 {	
+    EventBits_t r_event;
     while (1)
     {
-        if  ( DHT11_Read_TempAndHumidity ( & DHT11_Data ) == SUCCESS)
+      if  ( DHT11_Read_TempAndHumidity ( & DHT11_Data ) == SUCCESS)
 			{
 				printf("湿度为%d.%d ％RH ，温度为 %d.%d℃ \r\n",\
 				DHT11_Data.humi_int,DHT11_Data.humi_deci,DHT11_Data.temp_int,DHT11_Data.temp_deci);
@@ -160,11 +171,27 @@ static void DHT11_Task(void* parameter)
             LED_RED;
         }
 			}			
-		else
+		  else
 			{
 				printf("Read DHT11 ERROR!\r\n");
 			}
-			vTaskDelay(1000);
+
+      //在这个最高优先级的任务里收集其他任务是否有运行到的事情 运行到这会等待事情然后阻塞
+      r_event = xEventGroupWaitBits(Event_Handle,  /* 事件对象句柄 */
+                                MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT,/* 接收线程感兴趣的事件 */
+                                pdTRUE,   /* 退出时清除事件位 */
+                                pdTRUE,   /* 满足感兴趣的所有事件 */
+                                portMAX_DELAY);/* 指定超时事件,一直等 */
+      if((r_event & (MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT)) == (MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT)) 
+      {
+        /* 如果接收完成并且正确 */
+        printf( "MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT is 运行\n");
+        INFO("待实现：清除这三个位然后 喂狗\n");
+      }
+      else{
+        printf( "事件错误！\n");
+      }
+      vTaskDelay(1000);
     }
 }
 
@@ -218,6 +245,11 @@ static void Weight_Task(void* parameter)
             buzzer_off;
             LED_RGBOFF;
         }
+
+      INFO("该task 完成一次运行，触发事情！\n" );
+			/* 触发一个事件 */
+			xEventGroupSetBits(Event_Handle,Weight_Task_EVENT);
+
         vTaskDelay(500);    //发送太快了
 			}
     }
@@ -231,6 +263,11 @@ static void MQ2_Task(void* pvParameters){
           buzzer_on;
           LED_RED;
       }
+      
+      INFO("该task 完成一次运行，触发事情！\n" );
+			/* 触发一个事件 */
+			xEventGroupSetBits(Event_Handle,MQ2_Task_EVENT);
+
       vTaskDelay(500);
     }
 }
@@ -284,7 +321,7 @@ static void display_Task(void* parameter)
                                   &r_wei,      /* 发送的消息内容 */
                                   portMAX_DELAY); /* 等待时间 一直等 */                   
       if(pdTRUE == xReturn){
-        DBG("本次接收到的数据是%d\n",r_wei);
+        printf("消息队列接收data is %d\n",r_wei);
       }
       else{
         DBG("数据接收出错,错误代码0x%lx\n",xReturn);
@@ -292,6 +329,10 @@ static void display_Task(void* parameter)
       OLED_ShowNum(48+x,line_3,r_wei,1,16);
       x+=10;
       if(x>30)x=0;
+
+      INFO("该task 完成一次运行，触发事情！\n" );
+			/* 触发一个事件 */
+			xEventGroupSetBits(Event_Handle,display_Task_EVENT);
     }
 }
 /***********************************************************************

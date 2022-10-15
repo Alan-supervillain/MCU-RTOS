@@ -18,7 +18,7 @@
 #include "queue.h"
 #include "ADC_drv.h"
 #include "event_groups.h"
-
+#include "bsp_iwdg.h" 
 
 #define display_Task_EVENT  (0x01 << 0)//设置事件掩码的位0
 #define Weight_Task_EVENT   (0x01 << 1)//设置事件掩码的位1
@@ -156,6 +156,7 @@ static void AppTaskCreate(void)
   taskEXIT_CRITICAL();            //退出临界区
 }
 
+//优先级4到1排序了的
 static void DHT11_Task(void* parameter)
 {	
     EventBits_t r_event;
@@ -179,14 +180,16 @@ static void DHT11_Task(void* parameter)
       //在这个最高优先级的任务里收集其他任务是否有运行到的事情 运行到这会等待事情然后阻塞
       r_event = xEventGroupWaitBits(Event_Handle,  /* 事件对象句柄 */
                                 MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT,/* 接收线程感兴趣的事件 */
-                                pdTRUE,   /* 退出时清除事件位 */
+                                pdTRUE,   /* 函数退出时清除事件位 */
                                 pdTRUE,   /* 满足感兴趣的所有事件 */
-                                portMAX_DELAY);/* 指定超时事件,一直等 */
+                                portMAX_DELAY);/* 指定超时时间 */
+      //如果有事件位被设置，并且满足调用任务解除阻塞条件，则返回的值是满足调用任务退出阻塞态的事件组的值。如果是由于超时退出，则返回的值将不满足调用任务退出阻塞态的事件组的值。
       if((r_event & (MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT)) == (MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT)) 
       {
         /* 如果接收完成并且正确 */
         printf( "MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT is 运行\n");
-        INFO("待实现：清除这三个位然后 喂狗\n");
+        INFO("喂狗");
+        IWDG_ReloadCounter();
       }
       else{
         printf( "事件错误！\n");
@@ -349,7 +352,6 @@ static void BSP_Init(void)
 	 * 都统一用这个优先级分组，千万不要再分组，切忌。
 	 */
 	NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
-
 	LED_GPIO_Config();
 	USART_Config();
 	Key_GPIO_Config();    
@@ -361,6 +363,19 @@ static void BSP_Init(void)
 	OLED_Init();
 	ADC_InitConfig();
 	OLED_Clear();
+  /* 检查是否为独立看门狗复位 */
+  if (RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET)
+  {
+    INFO("独立看门狗复位");
+    /* 清除标志 */
+    RCC_ClearFlag();
+  }
+  else
+  {
+    /*不是独立看门狗复位(可能为上电复位或者手动按键复位之类的) */
+    INFO("不是独立看门狗复位");
+  }
+  IWDG_Config(IWDG_Prescaler_64 ,625);// IWDG 1s 超时溢出
 	INFO("硬件初始化成功\n");
 	INFO("你  好  兰  哥\n");
 	INFO("---------------------------------\n");

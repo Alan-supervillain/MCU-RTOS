@@ -28,6 +28,7 @@
         "oled_basic.h": "c",
         "oled.h": "c",
         "buzzer.h": "c",
-        "adc_drv.h": "c"
+        "adc_drv.h": "c",
+        "bsp_iwdg.h": "c"
     }
 }

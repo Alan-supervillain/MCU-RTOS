@@ -8,7 +8,7 @@
 #include "bsp_usart.h"
 #include "bsp_key.h"
 #include "buzzer.h"
-#include "bsp_dmziig.h"//电子秤双拼
+#include "bsp_dmziig.h"//电子秤(双拼输入法的拼音)
 #include "mylog.h"     //日志库等级版  INFO 一般用于打印些状态信息方便阅读  而WARN是调试用的 警告级别的
 #include "bsp_dht11.h"
 #include "delay.h"
@@ -28,12 +28,10 @@
 #define waring_temp   40            //高温报警设置值
 
 static TaskHandle_t AppTaskCreate_Handle = NULL;
-static TaskHandle_t DHT11_Task_Handle = NULL;
-/* Weight_Task任务句柄 */
-static TaskHandle_t Weight_Task_Handle = NULL;
-/* 显示屏任务句柄 */
+static TaskHandle_t DHT11_Task_Handle = NULL;      /* Weight_Task任务句柄 */
+static TaskHandle_t Weight_Task_Handle = NULL;     /* 显示屏任务句柄 */
 static TaskHandle_t display_Task_Handle = NULL;
-static TaskHandle_t MQ2_Task_Handle = NULL;//ADC外设  烟雾传感器任务
+static TaskHandle_t MQ2_Task_Handle = NULL;        //ADC外设  烟雾传感器任务
 /********************************** 内核对象句柄 *********************************/
 
 QueueHandle_t my_Queue =NULL;    //用的FIFO
@@ -43,9 +41,7 @@ QueueHandle_t my_Queue =NULL;    //用的FIFO
 static EventGroupHandle_t Event_Handle =NULL;
 
 /******************************* 全局变量声明 ************************************/
-/*
- * 当我们在写应用程序的时候，可能需要用到一些全局变量。
- */
+
 DHT11_Data_TypeDef DHT11_Data;
 uint16_t somke ;//烟雾浓度
 
@@ -188,7 +184,7 @@ static void DHT11_Task(void* parameter)
       {
         /* 如果接收完成并且正确 */
         printf( "MQ2_Task_EVENT|Weight_Task_EVENT|display_Task_EVENT is 运行\n");
-        INFO("喂狗");
+        INFO("---喂狗---");
         IWDG_ReloadCounter();
       }
       else{
@@ -221,16 +217,11 @@ static void Weight_Task(void* parameter)
       {
         printf("ERROR-->超重\n");
         buzzer_on;                            
-        LED_RED;                 WARN("这里涉及到互斥锁对资源的管理 在下一个else要设计但是还没写的");
+        LED_RED;                
 
       }		
       else
-      {       /*  
-              Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu/1000 + 0X30));
-              Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu%1000/100 + 0X30));
-              Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu%100/10 + 0X30));
-              Usart_SendByte(DEBUG_USARTx,(Weight_Shiwu%10 + 0X30));
-        */
+      {       
         wei_4=(Weight_Shiwu/1000);    
         wei_3=(Weight_Shiwu%1000/100);
         wei_2=(Weight_Shiwu%100/10);
@@ -253,7 +244,7 @@ static void Weight_Task(void* parameter)
 			/* 触发一个事件 */
 			xEventGroupSetBits(Event_Handle,Weight_Task_EVENT);
 
-        vTaskDelay(500);    //发送太快了
+        vTaskDelay(500);    //发送太快了 挂起给下一个任务运行机会
 			}
     }
 }
@@ -327,13 +318,13 @@ static void display_Task(void* parameter)
         printf("消息队列接收data is %d\n",r_wei);
       }
       else{
-        DBG("数据接收出错,错误代码0x%lx\n",xReturn);
+        DBG("数据接收出错,错误代码0x%lx",xReturn);
       }
       OLED_ShowNum(48+x,line_3,r_wei,1,16);
       x+=10;
       if(x>30)x=0;
 
-      INFO("该task 完成一次运行，触发事情！\n" );
+      INFO("该task 完成一次运行，触发事情!" );
 			/* 触发一个事件 */
 			xEventGroupSetBits(Event_Handle,display_Task_EVENT);
     }
@@ -379,6 +370,7 @@ static void BSP_Init(void)
 	INFO("硬件初始化成功\n");
 	INFO("你  好  兰  哥\n");
 	INFO("---------------------------------\n");
+  WARN("代码可读性规范--下次提交实现\n");
 }
 
 /********************************END OF FILE****************************/

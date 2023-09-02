@@ -8,7 +8,7 @@
 #define LOG_LEVEL_WARN    2
 #define LOG_LEVEL_ERR     1
 
-#define LOG_LEVEL_MAX     3      //----等级调节
+#define LOG_LEVEL_MAX     4      //----等级调节
 
 #ifndef LOG_LEVEL
 #define LOG_LEVEL  LOG_LEVEL_MAX
